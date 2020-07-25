@@ -1,4 +1,4 @@
-#include <TTGO.h>
+#include "config.h"
 #include <Esp.h>
 
 //! buzzer port to be controlled
@@ -18,7 +18,7 @@ void setup(void)
     ttgo->begin();
     ttgo->openBL();
     //! Create a new pointer to save the display object
-    tft = ttgo->eTFT;
+    tft = ttgo->tft;
 
     tft->fillScreen(TFT_BLACK);
     tft->setTextFont(2);

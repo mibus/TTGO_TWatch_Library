@@ -1,4 +1,4 @@
-#include <TTGO.h>
+#include "config.h"
 
 TTGOClass *ttgo;
 TFT_eSPI *tft ;
@@ -13,11 +13,11 @@ void setup(void)
     ttgo->begin();
     ttgo->openBL();
     //! Create a new pointer to save the display object
-    tft = ttgo->eTFT;
+    tft = ttgo->tft;
 
     tft->fillScreen(TFT_BLACK);
     tft->setTextFont(2);
-    tft->println("Begin ublox M8M/GPS Module...");
+    tft->println("Begin S7XG Module...");
 
     //! Open s7xg power
     ttgo->enableLDO4();
@@ -49,7 +49,7 @@ void setup(void)
     s7xg->gpsSetPortUplink(20);
     s7xg->gpsSetFormatUplink(1);
     s7xg->gpsSetMode(1);
-    
+
     tft->setCursor(0, 0);
     tft->fillScreen(TFT_BLACK);
     tft->println("Positioning...");

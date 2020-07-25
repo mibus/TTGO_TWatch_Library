@@ -1,5 +1,4 @@
-
-#include <TTGO.h>
+#include "config.h"
 
 TTGOClass *ttgo;
 
@@ -14,12 +13,12 @@ void setup()
 void loop()
 {
     Serial.println("R");
-    ttgo->eTFT->fillScreen(TFT_RED);
+    ttgo->tft->fillScreen(TFT_RED);
     delay(1000);
     Serial.println("G");
-    ttgo->eTFT->fillScreen(TFT_GREEN);
+    ttgo->tft->fillScreen(TFT_GREEN);
     delay(1000);
     Serial.println("B");
-    ttgo->eTFT->fillScreen(TFT_BLUE);
+    ttgo->tft->fillScreen(TFT_BLUE);
     delay(1000);
 }

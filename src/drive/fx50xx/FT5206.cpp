@@ -29,49 +29,35 @@ github:https://github.com/lewisxhe/FT5206_Library
 /////////////////////////////////////////////////////////////////
 #include "FT5206.h"
 
-FT5206_Class::FT5206_Class(TwoWire &port, uint8_t addr)
+int FT5206_Class::begin(TwoWire &port, uint8_t addr)
 {
     _i2cPort = &port;
     _address = addr;
+    return dev_probe();
 }
 
-
-int FT5206_Class::begin()
+int FT5206_Class::begin(tp_com_fptr_t read_cb, tp_com_fptr_t write_cb, uint8_t addr )
 {
-#if 0
-    if (version == LILYGO_TWATCH_FT62XX) {
-        uint8_t val;
-        _readByte(FT5206_VENDID_REG, 1, &val);
-        if (val != FT5206_VENDID && val != FT5206_VENDID1) {
-            return false;
-        }
-        _type = val;
-        _readByte(FT5206_CHIPID_REG, 1, &val);
-        if ((val != FT6206_CHIPID) && (val != FT6236_CHIPID) && (val != FT6236U_CHIPID) && (val != FT5206U_CHIPID)) {
-            return false;
-        }
-        _init = true;
-    } else if (version == LILYGO_TWATCH_CST026) {
-        _i2cPort->beginTransmission(_address);
-        _init = (0 == _i2cPort->endTransmission());
-        _type = CST026_VENDID;
-    }
-#else
-    uint8_t val;
-    _i2cPort->beginTransmission(_address);
-    if (0 != _i2cPort->endTransmission()) {
+    if (read_cb == nullptr || write_cb == nullptr) {
         return false;
     }
-    _readByte(FT5206_VENDID_REG, 1, &val);
-    if (val == FT5206_VENDID || val == FT5206_VENDID1) {
-        // Serial.print("FT5206_VENDID1 "); Serial.println(val);
-        _type = val;
-    } else {
-        // Serial.print("CST026_VENDID "); Serial.println(val);
-        _type = CST026_VENDID;
+    _read_cb = read_cb;
+    _write_cb = write_cb;
+    _address = addr;
+    return dev_probe();
+}
+
+int FT5206_Class::dev_probe()
+{
+    uint8_t val;
+    if (_read_cb == nullptr || _write_cb == nullptr) {
+        _i2cPort->beginTransmission(_address);
+        if (0 != _i2cPort->endTransmission()) {
+            return false;
+        }
     }
+    _readByte(FT5206_VENDID_REG, 1, &val);
     _init = true;
-#endif
     return _init;
 }
 
@@ -82,48 +68,14 @@ void FT5206_Class::adjustTheshold(uint8_t thresh)
     _writeByte(FT5206_THRESHHOLD_REG, 1, &thresh);
 }
 
-TP_Point FT5206_Class::getPoint(uint8_t num, uint8_t rotation)
+
+TP_Point FT5206_Class::getPoint(uint8_t num)
 {
     if (!_init) return TP_Point(0, 0);
     _readRegister();
     if ((_touches == 0) || (num > 1)) {
         return TP_Point(0, 0);
     } else {
-        switch (_type) {
-        case FT5206_VENDID: {
-            int16_t x = map(_x[num], 0, 320, 0, 240);
-            int16_t y = map(_y[num], 0, 320, 0, 240);
-            switch (rotation) {
-            case 0:
-                return TP_Point(x,  y);
-            case 1:
-                return TP_Point(y, 240 - x);
-            case 2:
-                return TP_Point(240 - x, 240 - y);
-            case 3:
-                return TP_Point( 240 - y, x);
-            default:
-                return TP_Point(x, y);
-            }
-        }
-        case CST026_VENDID:
-        case FT5206_VENDID1: {
-            switch (rotation) {
-            case 0:
-                return TP_Point(240 - _x[num], 240 - _y[num]);
-            case 1:
-                return TP_Point(240 - _y[num], _x[num]);
-            case 2:
-                return TP_Point(_x[num], _y[num]);
-            case 3:
-                return TP_Point(_y[num], 240 - _x[num]);
-            default:
-                return TP_Point(_x[num], _y[num]);
-            }
-        }
-        default:
-            break;
-        }
         return TP_Point(_x[num], _y[num]);
     }
 }
@@ -169,9 +121,5 @@ void FT5206_Class::_readRegister()
     }
 }
 
-uint8_t FT5206_Class::getType()
-{
-    return _type;
-}
 
 
